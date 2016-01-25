@@ -1,0 +1,33 @@
+#!/bin/bash
+#This script requires the use of s3cmd - http://s3tools.org/s3cmd
+#Backup Old Files to S3 - Philippe Carvalho - 27/10/2015
+LOGFILE='/var/backups/oldfiles/backup.log'
+BACKUPDIR='PATH TO BE BACKUPED UP'
+BACKUPCMD="/usr/bin/s3cmd --config=/root/.s3cfg put"
+S3TARGET="s3://BUCKET-NAME/$(date +%Y%m%d)/"
+DESTINATIONDIR='DESTINATION DIR'
+touch $LOGFILE
+
+echo "Starting backup of Files - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+cd $BACKUPDIR
+
+echo "Creating Compressed File - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+find -mtime +30 -type f > backup_list.txt
+
+tar -cvzf $DESTINATIONDIR/logs_$(date +%Y%m%d).tar.gz -T backup_list.txt
+
+echo "Compressed File - Create - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+echo "Uploading to AWS S3 - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+$BACKUPCMD $DESTINATIONDIR/logs_$(date +%Y%m%d).tar.gz $S3TARGET
+
+echo "Upload DONE - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+echo "Cleaning Temporary Files - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
+
+rm backup_list.txt
+
+echo "Protheus Logs Backed Up Succesfully - $(date +%Y%m%d) - $(date +%H:%M)" >> $LOGFILE
