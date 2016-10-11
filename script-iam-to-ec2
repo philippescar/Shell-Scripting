@@ -1,29 +1,38 @@
 #!/bin/bash
 # Shell Script for adding IAM on AWS EC2 Instances
 # This script allow you to copy the SSH Key from the IAM propertiers to the server
+# Please add "includedir /etc/sudoers.d" in the /etc/sudoers
 
 iam-user () {
 aws iam list-users --query "Users[].[UserName]" --output text
 }
 
+#Change this variable to the desired group
+groupname="sysadmin"
+
 iam-user | while read User; do
-	auth=`aws iam list-groups-for-user --user-name $User --query "Groups[].[GroupName]" --output text`
-  if [ "$auth" != "sysadmin" ]; then
-    echo "User $User not Authorized"
-  else
-    echo "User $User authorized"
-    if id -u "$User" >/dev/null 2>&1; then
-    echo "$User exists"
-    else
-    echo "Adding $User"
-    /usr/sbin/useradd "$User"
-    echo "$User ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$User"
-    mkdir /home/"$User"/.ssh && chmod 700 /home/"$User"/.ssh
-    echo "Adding SSH Key"
-      aws iam list-ssh-public-keys --user-name "$User" --query "SSHPublicKeys[?Status == 'Active'].[SSHPublicKeyId]" --output text | while read KeyId; do
-      aws iam get-ssh-public-key --user-name "$User" --ssh-public-key-id "$KeyId" --encoding SSH --query "SSHPublicKey.SSHPublicKeyBody" --output text >> /home/"$User"/.ssh/authorized.keys
-      chmod 700 /home/"$User"/.ssh/authorized.keys    
-    done 
+auth=`aws iam list-groups-for-user --user-name $User --query "Groups[].[GroupName]" --output text`
+  if [ ! "$auth" ]; then
+  echo "User $User not in a group"
   fi
+  if [ "$auth" != "$groupname" ]; then
+  echo "User $User not Authorized"
+  else
+  echo "User $User authorized"
+  if id -u "$User" >/dev/null 2>&1; then
+  echo "$User exists"
+  else
+  echo "Adding $User"
+  /usr/sbin/useradd "$User"
+  echo "$User ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$User"
+  mkdir /home/$User/.ssh
+  echo "Adding SSH Key"
+  aws iam list-ssh-public-keys --user-name "$User" --query "SSHPublicKeys[?Status == 'Active'].[SSHPublicKeyId]" --output text | while read KeyId; do
+  aws iam get-ssh-public-key --user-name "$User" --ssh-public-key-id "$KeyId" --encoding SSH --query "SSHPublicKey.SSHPublicKeyBody" --output text >> /home/$User/.ssh/authorized_keys
+  chmod 700 /home/$User/.ssh/authorized_keys && chown $User:$User /home/$User/.ssh -R
+  done
+  fi
+  fi
+done
    fi
 done
