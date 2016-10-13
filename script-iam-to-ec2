@@ -1,7 +1,6 @@
 #!/bin/bash
 # Shell Script for adding IAM on AWS EC2 Instances
 # This script allow you to copy the SSH Key from the IAM propertiers to the server
-# Please add "includedir /etc/sudoers.d" in the /etc/sudoers
 
 iam-user () {
 aws iam list-users --query "Users[].[UserName]" --output text
