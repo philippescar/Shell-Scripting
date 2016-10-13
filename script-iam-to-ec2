@@ -34,5 +34,3 @@ auth=`aws iam list-groups-for-user --user-name $User --query "Groups[].[GroupNam
   fi
   fi
 done
-   fi
-done
