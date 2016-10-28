@@ -1,6 +1,7 @@
 #!/bin/bash
 # Shell Script for adding IAM on AWS EC2 Instances
 # This script allow you to copy the SSH Key from the IAM propertiers to the server
+# If the user doesn't have a group it will appear "Not Authorized"
 
 iam-user () {
 aws iam list-users --query "Users[].[UserName]" --output text
