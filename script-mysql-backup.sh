@@ -1,5 +1,7 @@
 #!/bin/bash
 #Backup MySQL - Philippe Carvalho - 15/10/2013
+#This script make a backup for each table in the MySQL schema
+
 umask u=rw,g=,o=
 logfile='/var/backup/mysql.log'
 dumpdir='/var/backup'
